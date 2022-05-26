@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/RaymondCode/simple-demo/controller"
+	"github.com/RaymondCode/simple-demo/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,11 +14,14 @@ func initRouter(r *gin.Engine) {
 
 	// basic apis
 	apiRouter.GET("/feed/", controller.Feed)
-	apiRouter.GET("/user/", controller.UserInfo)
-	apiRouter.POST("/user/register/", controller.Register)
-	apiRouter.POST("/user/login/", controller.Login)
-	apiRouter.POST("/publish/action/", controller.Publish)
-	apiRouter.GET("/publish/list/", controller.PublishList)
+	// user api
+	userApi := apiRouter.Group("/user")
+	userApi.POST("/register/", controller.Register)
+	userApi.POST("/login/", controller.Login)
+	userApi.GET("", utils.JWTAuthMiddleware(), controller.UserInfo)
+
+	apiRouter.POST("/publish/action/", utils.JWTAuthMiddleware(), controller.Publish)
+	apiRouter.GET("/publish/list/", utils.JWTAuthMiddleware(), controller.PublishList)
 
 	// extra apis - I
 	apiRouter.POST("/favorite/action/", controller.FavoriteAction)

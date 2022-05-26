@@ -22,6 +22,7 @@ type Comment struct {
 	CreateDate string `json:"create_date,omitempty"`
 }
 
+// TODO 放到model里合并了
 type User struct {
 	Id            int64  `json:"id,omitempty"`
 	Name          string `json:"name,omitempty"`
