@@ -13,8 +13,9 @@ type MyClaims struct {
 	jwt.RegisteredClaims
 }
 
-// TokenExpireDuration 定义过期时间
-const TokenExpireDuration = time.Hour
+// TokenExpireDuration
+// TODO set a longer time for testing
+const TokenExpireDuration = time.Hour * 3000
 
 var MySecret = []byte("secret key")
 
@@ -24,8 +25,8 @@ func GenToken(ID int64) (string, error) {
 	c := MyClaims{
 		ID, // 自定义字段
 		jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(TokenExpireDuration)}, // 过期时间
-			Issuer:    "douyin-demo",                                               // 签发人
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(TokenExpireDuration)},
+			Issuer:    "douyin-demo",
 		},
 	}
 	// 使用指定的签名方法创建签名对象
