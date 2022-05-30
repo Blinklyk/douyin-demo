@@ -1,6 +1,7 @@
 package config
 
 type Server struct {
+	App     App     `mapstructure:"app" json:"app" yaml:"app"`
 	JWT     JWT     `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
 	Zap     Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`
 	Redis   Redis   `mapstructure:"redis" json:"redis" yaml:"redis"`

@@ -15,6 +15,10 @@ type VideoListResponse struct {
 	Response
 	VideoList []Video `json:"video_list"`
 }
+type VideoListResponse1 struct {
+	Response
+	VideoList []model.Video `json:"video_list"`
+}
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
@@ -107,12 +111,27 @@ func Publish(c *gin.Context) {
 	}
 }
 
-// PublishList all users have same publish video list
+// PublishList
+
+var publishVideos []model.Video
+
 func PublishList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
+
+	userID, exist := c.Get("ID")
+	if !exist {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Didn't get the ID from token"})
+		return
+	}
+
+	result := global.DY_DB.Where("user_id = ?", userID).Preload("User").Order("ID desc").Find(&publishVideos)
+	if result.RowsAffected == 0 {
+		log.Println("0 videos query from database")
+	}
+
+	c.JSON(http.StatusOK, VideoListResponse1{
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		VideoList: publishVideos,
 	})
 }

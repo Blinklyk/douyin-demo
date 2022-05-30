@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"github.com/RaymondCode/simple-demo/global"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/gin-gonic/gin"
@@ -30,4 +31,13 @@ func Feed(c *gin.Context) {
 		VideoList: videos,
 		NextTime:  time.Now().Unix(),
 	})
+}
+
+func Test(c *gin.Context) {
+
+	c.JSON(http.StatusOK, "pong")
+	global.DY_REDIS.SetNX(context.Background(), "time", "1640", 10)
+
+	res := global.DY_REDIS.Get(context.Background(), "time")
+	log.Println(res)
 }

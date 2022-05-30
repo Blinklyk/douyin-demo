@@ -1,0 +1,18 @@
+app: # 应用基本配置
+  env: local # 环境名称
+  port: 8080 # 服务监听端口号
+  app_name: gin-app # 应用名称
+  app_url: 0.0.0.0 # 应用域名
+
+
+redis:
+  DB: 0
+  Addr: 127.0.0.1:6379
+  Password:
+
+jwt:
+  SigningKey: "secret key"
+  ExpiresTime:
+  BufferTime:       # 缓冲时间
+  Issuer: "douyin-demo" #签发人
+  JwtBlacklistGracePeriod: 10 # 黑名单宽限时间
