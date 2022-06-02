@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/RaymondCode/simple-demo/global"
 	"github.com/RaymondCode/simple-demo/initialize"
 	"github.com/gin-gonic/gin"
@@ -26,25 +27,19 @@ func main() {
 
 func Init() error {
 
-	// 初始化Viper
+	// init Viper
 	initialize.InitializeConfig()
-	// 初始化Redis
+	// init Redis
 	global.DY_REDIS = initialize.InitializeRedis()
-	//zap.ReplaceGlobals(global.DY_LOG) // 初始化zap日志
-	global.DY_DB = initialize.Gorm() // gorm连接数据库
+	//zap.ReplaceGlobals(global.DY_LOG) // init zap log
+	global.DY_DB = initialize.Gorm() // init gorm and connect db
 	if global.DY_DB == nil {
-		log.Println("gorm initialize failed.")
+		return errors.New("gorm initialize failed")
 	} else {
 		log.Println("gorm initialize success.")
-		initialize.RegisterTables(global.DY_DB) // 初始化表
-		// 程序结束前关闭数据库链接
-		//db, _ := global.DY_DB.DB()
-		//defer db.Close()
+		initialize.RegisterTables(global.DY_DB) // init tables
 	}
 
-	//if err := repository.Init(); err != nil {
-	//	return err
-	//}
 	return nil
 
 }

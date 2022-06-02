@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"github.com/RaymondCode/simple-demo/global"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/RaymondCode/simple-demo/utils"
@@ -55,11 +56,19 @@ func Publish(c *gin.Context) {
 	//	StatusMsg:  finalName + " uploaded successfully",
 	//})
 
-	userID, exist := c.Get("ID")
-	if !exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Didn't get the ID from token"})
+	UserStr, _ := c.Get("UserStr")
+
+	log.Println("UserStr: ", UserStr)
+
+	var userInfoVar model.User
+	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusOK, CheckUserInfoResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"},
+		})
 		return
 	}
+
 	title := c.PostForm("title")
 	// save the file at local host
 	data, err := c.FormFile("data")
@@ -87,12 +96,13 @@ func Publish(c *gin.Context) {
 	log.Println(VideoUrl)
 
 	publishVideo := &model.Video{
-		UserID:        userID.(int64),
+		UserID:        userInfoVar.ID,
 		PlayUrl:       VideoUrl,
 		FavoriteCount: 0,
 		CommentCount:  0,
 		PublishTime:   time.Now(),
 		Title:         title,
+		IsFavorite:    false,
 	}
 
 	result := global.DY_DB.Model(&model.Video{}).Create(&publishVideo)
@@ -111,22 +121,27 @@ func Publish(c *gin.Context) {
 	}
 }
 
-// PublishList
-
-var publishVideos []model.Video
+// Get PublishList
 
 func PublishList(c *gin.Context) {
 
-	userID, exist := c.Get("ID")
-	if !exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Didn't get the ID from token"})
+	UserStr, _ := c.Get("UserStr")
+
+	log.Println("UserStr: ", UserStr)
+
+	var userInfoVar model.User
+	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusOK, CheckUserInfoResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"},
+		})
 		return
 	}
 
-	result := global.DY_DB.Where("user_id = ?", userID).Preload("User").Order("ID desc").Find(&publishVideos)
-	if result.RowsAffected == 0 {
-		log.Println("0 videos query from database")
-	}
+	var publishVideos []model.Video
+	result := global.DY_DB.Where("user_id = ?", userInfoVar.ID).Preload("User").Order("ID desc").Find(&publishVideos)
+	//log.Printf("publishVideos: ", publishVideos[0].IsFavorite)
+	log.Println(result.RowsAffected, " videos query from database")
 
 	c.JSON(http.StatusOK, VideoListResponse1{
 		Response: Response{

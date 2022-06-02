@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"encoding/json"
+	"github.com/RaymondCode/simple-demo/global"
 	"github.com/RaymondCode/simple-demo/model"
 	"github.com/RaymondCode/simple-demo/service"
 	"github.com/gin-gonic/gin"
@@ -22,6 +24,14 @@ var usersLoginInfo = map[string]User{
 }
 
 var userIdSequence = int64(1)
+
+type userInfoVar struct {
+	ID            int64  `json:"id"`
+	Name          string `json:"name,omitempty"`
+	FollowCount   int64  `json:"follow_count,omitempty"`
+	FollowerCount int64  `json:"follower_count,omitempty"`
+	IsFollow      bool   `json:"is_follow,omitempty"`
+}
 
 type UserLoginResponse struct {
 	Response
@@ -78,7 +88,7 @@ func Register(c *gin.Context) {
 				StatusMsg:  "success: create register user ",
 			},
 			UserId: userReturn.ID,
-			Token:  userReturn.Username + userReturn.Password,
+			Token:  userReturn.Username,
 		})
 	}
 
@@ -107,6 +117,8 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	log.Println("global.DY_SESSION_STORE", global.DY_SESSION_STORE)
 	user := &model.User{Username: l.Username, Password: l.Password}
 	var loginService = service.UserService{}
 	userReturn, tokenStr, err := loginService.Login(*user)
@@ -148,20 +160,16 @@ func UserInfo(c *gin.Context) {
 	//	})
 	//}
 
-	userID, exist := c.Get("ID")
-	log.Println(userID)
-	log.Println(exist)
+	//jwt version
+	UserStr, _ := c.Get("UserStr")
 
-	var userInfoVar struct {
-		ID            int64  `json:"id"`
-		Name          string `json:"name,omitempty"`
-		FollowCount   int64  `json:"follow_count,omitempty"`
-		FollowerCount int64  `json:"follower_count,omitempty"`
-		IsFollow      bool   `json:"is_follow,omitempty"`
-	}
-	if err := c.BindQuery(&userInfoVar); err != nil {
+	log.Println("UserStr: ", UserStr)
+
+	var userInfoVar model.User
+	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
+		log.Println(err)
 		c.JSON(http.StatusOK, CheckUserInfoResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "error: bind error"},
+			Response: Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"},
 		})
 		return
 	}
@@ -172,19 +180,49 @@ func UserInfo(c *gin.Context) {
 		})
 		return
 	}
-	var checkUserInfoService = service.UserService{}
-	returnUser, err := checkUserInfoService.CheckUserInfo(userID.(int64))
-	if err != nil {
-		c.JSON(http.StatusOK, CheckUserInfoResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist1"},
-		})
-		return
-	} else {
-		c.JSON(http.StatusOK, CheckUserInfoResponse{
-			Response: Response{StatusCode: 0},
-			UserInfo: *returnUser,
-		})
-		return
-	}
+	// get user info from db
+	//var checkUserInfoService = service.UserService{}
+	//returnUser, err := checkUserInfoService.CheckUserInfo(userID.(int64))
+
+	c.JSON(http.StatusOK, CheckUserInfoResponse{
+		Response: Response{StatusCode: 0},
+		UserInfo: userInfoVar,
+	})
+	return
+
+	////session version
+	//// get user from redis
+	//userID := c.Query("user_id")
+	//session := sessions.Default(c)
+	//jsonUser := session.Get(userID)
+	//log.Println("jsonUser : ", jsonUser)
+	//log.Println(c.GetHeader("Cookie"))
+	//log.Println(c.GetHeader("Host"))
+	//log.Println(c.GetHeader("Connection"))
+	//
+	////userInfoVar := &userInfoVar{}
+	//userInfoVar := &model.User{}
+	//
+	//err := json.Unmarshal(jsonUser.([]byte), userInfoVar)
+	//if err != nil {
+	//	c.JSON(http.StatusOK, CheckUserInfoResponse{
+	//		Response: Response{StatusCode: 1, StatusMsg: "Unmarshal from session failed"},
+	//	})
+	//	return
+	//}
+	//
+	//if len(userInfoVar.Name) < 0 {
+	//	c.JSON(http.StatusOK, CheckUserInfoResponse{
+	//		Response: Response{StatusCode: 1, StatusMsg: "userName len is 0"},
+	//	})
+	//	return
+	//}
+	//
+	//
+	//c.JSON(http.StatusOK, CheckUserInfoResponse{
+	//	Response: Response{StatusCode: 0},
+	//	UserInfo: *userInfoVar,
+	//})
+	//return
 
 }

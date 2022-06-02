@@ -6,7 +6,7 @@ app: # 应用基本配置
 
 
 redis:
-  DB: 0
+  DB: 1
   Addr: 127.0.0.1:6379
   Password:
 

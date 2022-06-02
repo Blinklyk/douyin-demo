@@ -21,7 +21,7 @@ func Gorm() *gorm.DB {
 		DontSupportRenameColumn:   true,                                                                                     // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
 		SkipInitializeWithVersion: false,                                                                                    // 根据当前 MySQL 版本自动配置
 	}), &gorm.Config{
-		SkipDefaultTransaction: false,
+		SkipDefaultTransaction: false, // 默认false
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "dy_", // 添加表名前缀
 			SingularTable: true,  // 启用单数表名，
@@ -51,6 +51,7 @@ func RegisterTables(db *gorm.DB) {
 		// 测试用户表
 		model.User{},
 		model.Video{},
+		model.UserFavoriteVideos{},
 	)
 	if err != nil {
 		os.Exit(0)

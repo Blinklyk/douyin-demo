@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"context"
 	"errors"
+	"github.com/RaymondCode/simple-demo/global"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"log"
 	"net/http"
 	"time"
 )
@@ -15,15 +18,15 @@ type MyClaims struct {
 
 // TokenExpireDuration
 // TODO set a longer time for testing
-const TokenExpireDuration = time.Hour * 3000
+const TokenExpireDuration = time.Minute
 
 var MySecret = []byte("secret key")
 
-// GenToken 生成JWT
+// GenToken gen JWT token and set the configration
 func GenToken(ID int64) (string, error) {
-	// 创建一个我们自己的声明
+	// create our own claims map
 	c := MyClaims{
-		ID, // 自定义字段
+		ID, // store ID in Preload
 		jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(TokenExpireDuration)},
 			Issuer:    "douyin-demo",
@@ -58,17 +61,40 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 			tokenStr = c.PostForm("token")
 		}
 
-		mc, err := ParseToken(tokenStr)
-		if err != nil {
+		//jwt framework parse token version
+		//mc, err := ParseToken(tokenStr)
+
+		// redis parse token version
+		// key:login:session:"+tokenStr, value:user TTL:10min
+		res := global.DY_REDIS.Get(context.Background(), "login:session:"+tokenStr)
+		log.Println("jwt check from redis:", res)
+		UserStr := res.Val()
+		// if token already expired, abort
+		if UserStr == "" {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 2005,
-				"msg":  "无效的Token/Token验证错误",
+				"msg":  "无效的Token/Token验证错误/Token过期",
 			})
 			c.Abort()
 			return
 		}
+		// refresh the token expire time
+		global.DY_REDIS.Expire(context.Background(), "login:session:"+tokenStr, time.Minute*30)
+		c.Set("UserStr", UserStr)
+		c.Next()
+
+		//if err != nil {
+		//	c.JSON(http.StatusOK, gin.H{
+		//		"code": 2005,
+		//		"msg":  "无效的Token/Token验证错误",
+		//	})
+		//	c.Abort()
+		//	return
+		//}
 		// 将当前请求的username信息保存到请求的上下文c上
-		c.Set("ID", mc.ID)
-		c.Next() // 后续的处理函数可以用过c.Get("username")来获取当前请求的用户信息
+		//c.Set("ID", mc.ID)
+		//c.Next() // 后续的处理函数可以用过c.Get("username")来获取当前请求的用户信息
+		//c.Set("UserStr", UserStr)
+		//c.Next()
 	}
 }

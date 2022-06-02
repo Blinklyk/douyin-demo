@@ -16,17 +16,30 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/feed/", controller.Feed)
 	apiRouter.GET("/test/", controller.Test)
 	// user api
+
 	userApi := apiRouter.Group("/user")
+	//userApi.Use(sessions.Sessions("mysession", global.DY_SESSION_STORE))
 	userApi.POST("/register/", controller.Register)
+
+	// session middleware
+
 	userApi.POST("/login/", controller.Login)
+
+	////session login
+	//userApi.GET("", controller.UserInfo)
+	//
+	//apiRouter.POST("/publish/action/", controller.Publish)
+	//apiRouter.GET("/publish/list/", controller.PublishList)
+
+	//jwt logic
 	userApi.GET("", utils.JWTAuthMiddleware(), controller.UserInfo)
 
 	apiRouter.POST("/publish/action/", utils.JWTAuthMiddleware(), controller.Publish)
 	apiRouter.GET("/publish/list/", utils.JWTAuthMiddleware(), controller.PublishList)
 
 	// extra apis - I
-	apiRouter.POST("/favorite/action/", controller.FavoriteAction)
-	apiRouter.GET("/favorite/list/", controller.FavoriteList)
+	apiRouter.POST("/favorite/action/", utils.JWTAuthMiddleware(), controller.FavoriteAction)
+	apiRouter.GET("/favorite/list/", utils.JWTAuthMiddleware(), controller.FavoriteList)
 	apiRouter.POST("/comment/action/", controller.CommentAction)
 	apiRouter.GET("/comment/list/", controller.CommentList)
 
