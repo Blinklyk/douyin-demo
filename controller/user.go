@@ -67,7 +67,11 @@ func Register(c *gin.Context) {
 	//	})
 	//}
 	// 把校验接受数据以及校验放在结构体Register上
-	var r model.Register
+	type RegisterVar struct {
+		Username string `json:"username" gorm:"not null; comment:username for register;" form:"username"`
+		Password string `json:"password" gorm:"not null; comment:password for register" form:"password"`
+	}
+	var r RegisterVar
 	if err := c.ShouldBind(&r); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -111,8 +115,11 @@ func Login(c *gin.Context) {
 	//		Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 	//	})
 	//}
-
-	var l model.Login
+	type LoginVar struct {
+		Username string `json:"username" gorm:"not null; comment:username for register;" form:"username"`
+		Password string `json:"password" gorm:"not null; comment:password for register" form:"password"`
+	}
+	var l LoginVar
 	if err := c.ShouldBind(&l); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

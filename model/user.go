@@ -18,15 +18,6 @@ type User struct {
 	Username       string         `json:"username" gorm:"comment:username" `         // 登录账号
 	Password       string         `json:"password" gorm:"comment:password"`          // 登录密码
 	Videos         []Video        `json:"videos" gorm:"comment:pulished videos"`     // 视频列表
-	FavoriteVideos []Video        `gorm:"many2many:user_favoriteVideos"`             // 点赞视频列表
-}
-
-type Register struct {
-	Username string `json:"username" gorm:"not null; comment:username for register;" form:"username"`
-	Password string `json:"password" gorm:"not null; comment:password for register" form:"password"`
-}
-
-type Login struct {
-	Username string `json:"username" gorm:"not null; comment:username for register;" form:"username"`
-	Password string `json:"password" gorm:"not null; comment:password for register" form:"password"`
+	FavoriteVideos []Video        `gorm:"many2many:favorite"`                        // 点赞视频列表
+	Followers      []User         `gorm:"many2many:follow"`                          // 粉丝列表
 }

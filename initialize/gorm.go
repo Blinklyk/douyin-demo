@@ -51,7 +51,8 @@ func RegisterTables(db *gorm.DB) {
 		// 测试用户表
 		model.User{},
 		model.Video{},
-		model.UserFavoriteVideos{},
+		model.Favorite{},
+		model.Comment{},
 	)
 	if err != nil {
 		os.Exit(0)

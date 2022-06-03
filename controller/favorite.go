@@ -27,8 +27,9 @@ func FavoriteAction(c *gin.Context) {
 		})
 		return
 	}
-	userID := c.PostForm("user_id")
-	videoID := c.PostForm("video_id")
+	userID := c.Query("user_id")
+	log.Println("userID: ", userID)
+	videoID := c.Query("video_id")
 	log.Println("videoID: ", videoID)
 	// converse to int64 format
 	// TODO verify userID nad videoID
@@ -42,24 +43,31 @@ func FavoriteAction(c *gin.Context) {
 	//}
 	// action_type determines operationCount
 
-	userFavoriteVideo := &model.UserFavoriteVideos{
-		UserID:  userIDNum,
+	favoriteInfo := &model.Favorite{
+		UserID:  userInfoVar.ID,
 		VideoID: videoIDNum,
 	}
 
-	actionType := c.PostForm("action_type")
+	actionType := c.Query("action_type")
 	actionTypeNum, _ := strconv.ParseInt(actionType, 10, 64)
 
 	if actionTypeNum == 1 {
+		// check if add already
+		res := global.DY_DB.Where("user_id = ? AND video_id = ?", userID, videoID).First(&model.Favorite{})
+		if res.RowsAffected != 0 {
+			c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "already add favorite this video"})
+			return
+		}
+
 		// add favorite transaction:
 		// 1. create data in user_favorite_video table
 		// 2. update favorite_count in videos table
 		AddFavorite := func(x *gorm.DB) error {
 			tx := global.DY_DB.Begin()
 
-			if err := tx.Create(&userFavoriteVideo).Error; err != nil {
+			if err := tx.Create(&favoriteInfo).Error; err != nil {
 				log.Println("error when insert u_f_v :", err)
-				c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "Duplicate entry"})
+				c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "error: when insert favorite"})
 				tx.Rollback()
 				return err
 			}
@@ -84,13 +92,20 @@ func FavoriteAction(c *gin.Context) {
 	}
 
 	if actionTypeNum == 2 {
-		// add favorite transaction:
-		// 1. delete data in user_favorite_video table  (hard delete)
+		// check if delete already
+		res := global.DY_DB.Where("user_id = ? AND video_id = ?", userID, videoID).First(&model.Favorite{})
+		if res.RowsAffected == 0 {
+			c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "err: No add favorite this video before"})
+			return
+		}
+
+		// cancel favorite transaction:
+		// 1. delete data in user_favorite_video table  (soft delete)
 		// 2. update favorite_count in videos table
 		CancelFavorite := func(x *gorm.DB) error {
 			tx := global.DY_DB.Begin()
 
-			if err := tx.Unscoped().Delete(&model.UserFavoriteVideos{}, "user_id = ? AND video_id = ?", userIDNum, videoIDNum).Error; err != nil {
+			if err := tx.Delete(&model.Favorite{}, "user_id = ? AND video_id = ?", userIDNum, videoIDNum).Error; err != nil {
 				log.Println("error when delete u_f_v :", err)
 				tx.Rollback()
 				return err
@@ -117,7 +132,7 @@ func FavoriteAction(c *gin.Context) {
 	c.JSON(http.StatusOK, Response{StatusCode: 0})
 }
 
-// FavoriteList get from user_favorite_videos table
+// FavoriteList get from favorite table
 func FavoriteList(c *gin.Context) {
 
 	// verify
@@ -131,21 +146,17 @@ func FavoriteList(c *gin.Context) {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"})
 		return
 	}
-	userID := c.Query("user_id")
-	if strconv.FormatInt(userInfoVar.ID, 10) != userID {
-		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "token error"})
-	}
 
 	// find favorite videos from db
 	//var userFavoriteVideos model.UserFavoriteVideos
 	var favoriteVideoList []model.Video
 	var videosID []int64
 	// get video_id from conn table first
-	res0 := global.DY_DB.Table("dy_user_favorite_videos").Select("video_id").Where("user_id = ?", userID).Find(&videosID)
+	res0 := global.DY_DB.Table("dy_favorite").Select("video_id").Where("user_id = ?", userInfoVar.ID).Find(&videosID)
 	log.Println("res0.error: ", res0.Error)
 	log.Printf("%v\n", videosID)
 	// get video details from video table by selecting video_id
-	res := global.DY_DB.Model(&model.Video{}).Where("ID in ?", videosID).Preload("").Find(&favoriteVideoList)
+	res := global.DY_DB.Model(&model.Video{}).Where("ID in ?", videosID).Find(&favoriteVideoList)
 	log.Println("get res RowEffect", res.RowsAffected)
 
 	c.JSON(http.StatusOK, VideoListResponse1{
