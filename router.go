@@ -18,10 +18,9 @@ func initRouter(r *gin.Engine) {
 	// user api
 
 	userApi := apiRouter.Group("/user")
+	// session middleware
 	//userApi.Use(sessions.Sessions("mysession", global.DY_SESSION_STORE))
 	userApi.POST("/register/", controller.Register)
-
-	// session middleware
 
 	userApi.POST("/login/", controller.Login)
 
@@ -44,7 +43,7 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/comment/list/", utils.JWTAuthMiddleware(), controller.CommentList)
 
 	// extra apis - II
-	apiRouter.POST("/relation/action/", controller.RelationAction)
-	apiRouter.GET("/relation/follow/list/", controller.FollowList)
-	apiRouter.GET("/relation/follower/list/", controller.FollowerList)
+	apiRouter.POST("/relation/action/", utils.JWTAuthMiddleware(), controller.RelationAction)
+	apiRouter.GET("/relation/follow/list/", utils.JWTAuthMiddleware(), controller.FollowList)
+	apiRouter.GET("/relation/follower/list/", utils.JWTAuthMiddleware(), controller.FollowerList)
 }

@@ -18,7 +18,7 @@ type FeedResponse struct {
 
 var videos []model.Video
 
-// Feed same demo video list for every request
+// Feed token is optional here
 func Feed(c *gin.Context) {
 
 	result := global.DY_DB.Preload("User").Order("ID desc").Find(&videos)

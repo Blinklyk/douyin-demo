@@ -35,12 +35,7 @@ func FavoriteAction(c *gin.Context) {
 	// TODO verify userID nad videoID
 	userIDNum, _ := strconv.ParseInt(userID, 10, 64)
 	videoIDNum, _ := strconv.ParseInt(videoID, 10, 64)
-	//if exist != false {
-	//	c.JSON(http.StatusBadRequest, CheckUserInfoResponse{
-	//		Response: Response{StatusCode: 1, StatusMsg: "error: didn't get video_id in request"},
-	//	})
-	//	return
-	//}
+
 	// action_type determines operationCount
 
 	favoriteInfo := &model.Favorite{
@@ -152,11 +147,12 @@ func FavoriteList(c *gin.Context) {
 	var favoriteVideoList []model.Video
 	var videosID []int64
 	// get video_id from conn table first
-	res0 := global.DY_DB.Table("dy_favorite").Select("video_id").Where("user_id = ?", userInfoVar.ID).Find(&videosID)
-	log.Println("res0.error: ", res0.Error)
-	log.Printf("%v\n", videosID)
+	if err := global.DY_DB.Table("dy_favorite").Distinct("video_id").Where("user_id = ? AND deleted_at is null", userInfoVar.ID).Find(&videosID).Error; err != nil {
+		return
+	}
+
 	// get video details from video table by selecting video_id
-	res := global.DY_DB.Model(&model.Video{}).Where("ID in ?", videosID).Find(&favoriteVideoList)
+	res := global.DY_DB.Model(&model.Video{}).Where("ID in ?", videosID).Preload("User").Find(&favoriteVideoList)
 	log.Println("get res RowEffect", res.RowsAffected)
 
 	c.JSON(http.StatusOK, VideoListResponse1{

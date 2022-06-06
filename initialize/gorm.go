@@ -26,7 +26,7 @@ func Gorm() *gorm.DB {
 			TablePrefix:   "dy_", // 添加表名前缀
 			SingularTable: true,  // 启用单数表名，
 		},
-		DisableForeignKeyConstraintWhenMigrating: false, // 逻辑外键 （代码自动外键关系）
+		DisableForeignKeyConstraintWhenMigrating: true, // 是否关闭逻辑外键 （代码自动外键关系）
 
 	})
 	if err != nil {
@@ -53,6 +53,8 @@ func RegisterTables(db *gorm.DB) {
 		model.Video{},
 		model.Favorite{},
 		model.Comment{},
+		model.Follow{},
+		model.Follower{},
 	)
 	if err != nil {
 		os.Exit(0)

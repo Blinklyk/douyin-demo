@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	// TODO 改成嵌入结构体
+	// TODO 固定字段改成嵌入结构体
 	ID             int64          `gorm:"primarykey"` // 主键ID
 	CreatedAt      time.Time      // 创建时间
 	UpdatedAt      time.Time      // 更新时间
@@ -17,7 +17,6 @@ type User struct {
 	IsFollow       bool           `json:"is_follow,omitempty" gorm:"default:false"`  // 当前用户是否关注
 	Username       string         `json:"username" gorm:"comment:username" `         // 登录账号
 	Password       string         `json:"password" gorm:"comment:password"`          // 登录密码
-	Videos         []Video        `json:"videos" gorm:"comment:pulished videos"`     // 视频列表
-	FavoriteVideos []Video        `gorm:"many2many:favorite"`                        // 点赞视频列表
-	Followers      []User         `gorm:"many2many:follow"`                          // 粉丝列表
+	Videos         []Video        `json:"videos"`                                    // 发布视频列表
+	FavoriteVideos []Video        `json:"favorite_videos"`                           //`gorm:"many2many:favorite"`                        // 点赞视频列表
 }

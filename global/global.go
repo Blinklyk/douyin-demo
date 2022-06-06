@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -21,6 +22,8 @@ var (
 )
 
 const (
-	SECRETKEY    = "secrete key"
-	DY_OSSDOMAIN = "http://rceumi5re.bkt.gdipper.com/"
+	SECRETKEY         = "secrete key"
+	DY_OSSDOMAIN      = "http://rceumi5re.bkt.gdipper.com/"
+	REDIS_USER_PREFIX = "login:session:"
+	REDIS_USER_TTL    = time.Minute * 60
 )

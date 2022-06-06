@@ -20,5 +20,5 @@ type Video struct {
 	IsFavorite    bool           `json:"is_favorite,omitempty" gorm:"default:false"`  // 是否点赞
 	PublishTime   time.Time      `json:"publish_time,omitempty" gorm:"comment:投稿时间"`  // 投稿时间
 	Title         string         `json:"title, omitempty" gorm:"comment:视频说明"`        // 投稿时添加的文字
-	CommentList   []Comment      `json:"comment_list"`
+	CommentList   []Comment      `json:"comment_list"`                                // 视频下的评论列表
 }
