@@ -4,117 +4,93 @@ import (
 	"encoding/json"
 	"github.com/RaymondCode/simple-demo/global"
 	"github.com/RaymondCode/simple-demo/model"
-	"github.com/RaymondCode/simple-demo/utils"
+	"github.com/RaymondCode/simple-demo/model/request"
+	"github.com/RaymondCode/simple-demo/model/response"
+	"github.com/RaymondCode/simple-demo/service"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"path/filepath"
-	"time"
 )
-
-type VideoListResponse1 struct {
-	Response
-	VideoList []model.Video `json:"video_list"`
-}
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
 
+	// authentication
 	UserStr, _ := c.Get("UserStr")
-
 	log.Println("UserStr: ", UserStr)
 
 	var userInfoVar model.User
 	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusOK, CheckUserInfoResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"},
-		})
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"})
 		return
 	}
 
-	//var publicRequest request.PublishRequest
-	//if err := c.ShouldBind(&publicRequest); err != nil {
-	//	c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "bind error" + err.Error()})
-	//	return
-	//}
+	// bind request var
+	var publicRequest request.PublishRequest
+	if err := c.ShouldBind(&publicRequest); err != nil {
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "bind error " + err.Error()})
+		return
+	}
 
-	title := c.PostForm("title")
-	// save the file at local host
+	// save the file at localhost and get the localFilePath
 	data, err := c.FormFile("data")
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "error: data " + err.Error()})
 		return
 	}
 	filename := filepath.Base(data.Filename)
-	saveFile := filepath.Join("public/", filename)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
+
+	localFilePath := filepath.Join(global.LOCAL_FILE_PATH_PREFIX, filename)
+	if err := c.SaveUploadedFile(data, localFilePath); err != nil {
+		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error: save upload file " + err.Error()})
 		return
 	}
 
-	// upload the file to oss
-	ret := utils.UploadFile("public/" + filename)
-	// get the url from oss
-	VideoUrl := global.DY_OSSDOMAIN + ret.Key
-	log.Println(VideoUrl)
-
-	publishVideo := &model.Video{
-		UserID:        userInfoVar.ID,
-		PlayUrl:       VideoUrl,
-		FavoriteCount: 0,
-		CommentCount:  0,
-		PublishTime:   time.Now(),
-		Title:         title,
-		IsFavorite:    false,
+	// call publish action service
+	ps := service.PublishService{}
+	if err = ps.PublishAction(&userInfoVar, &publicRequest, localFilePath); err != nil {
+		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error in publish service: " + err.Error()})
 	}
 
-	result := global.DY_DB.Model(&model.Video{}).Create(&publishVideo)
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	} else {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 0,
-			StatusMsg:  "发布成功！",
-		})
-		return
-	}
+	c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "发布成功！"})
+	return
+
 }
 
 // Get PublishList
 
 func PublishList(c *gin.Context) {
 
+	// authentication
 	UserStr, _ := c.Get("UserStr")
-
 	log.Println("UserStr: ", UserStr)
 
 	var userInfoVar model.User
 	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusOK, CheckUserInfoResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"},
-		})
+		c.JSON(http.StatusOK, response.Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"})
 		return
 	}
 
-	var publishVideos []model.Video
-	result := global.DY_DB.Where("user_id = ?", userInfoVar.ID).Preload("User").Order("ID desc").Find(&publishVideos)
-	//log.Printf("publishVideos: ", publishVideos[0].IsFavorite)
-	log.Println(result.RowsAffected, " videos query from database")
+	// bind request var
+	var publishListRequest request.PublishListRequest
+	if err := c.ShouldBind(&publishListRequest); err != nil {
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "bind error " + err.Error()})
+		return
+	}
 
-	c.JSON(http.StatusOK, VideoListResponse1{
-		Response: Response{
+	// call service
+	ps := service.PublishService{}
+	publishVideos, err := ps.PublishList(&publishListRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error in publish service: " + err.Error()})
+	}
+
+	// return
+	c.JSON(http.StatusOK, response.PublishListResponse{
+		Response: response.Response{
 			StatusCode: 0,
 		},
 		VideoList: publishVideos,

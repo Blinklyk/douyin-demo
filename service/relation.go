@@ -13,7 +13,8 @@ import (
 
 type RelationService struct{}
 
-func (us *RelationService) RelationAction(userInfoVar model.User, actionVar *request.RelationActionRequest) error {
+// RelationAction two action type: add follow or cancel follow
+func (us *RelationService) RelationAction(userInfoVar *model.User, actionVar *request.RelationActionRequest) error {
 
 	actionType := actionVar.ActionType
 	// follow operation
@@ -31,7 +32,8 @@ func (us *RelationService) RelationAction(userInfoVar model.User, actionVar *req
 
 }
 
-func Follow(userInfoVar model.User, actionVar *request.RelationActionRequest) error {
+// Follow user adds follow relation with another user
+func Follow(userInfoVar *model.User, actionVar *request.RelationActionRequest) error {
 	toUserIDNum, _ := strconv.ParseInt(actionVar.ToUserID, 10, 64)
 
 	// transaction: 1. if the table have the relation record; 2. determine the status column and set the toUser status 3. insert in follow table; 4. insert into follower table；
@@ -114,7 +116,8 @@ func Follow(userInfoVar model.User, actionVar *request.RelationActionRequest) er
 	return err
 }
 
-func CancelFollow(userInfoVar model.User, actionVar *request.RelationActionRequest) error {
+// CancelFollow user cancel follow relation with another user
+func CancelFollow(userInfoVar *model.User, actionVar *request.RelationActionRequest) error {
 
 	// transaction: 1. if the table have the relation record; 2. update the status column in follow table 3. delete relation in follow table; 4. delete relation in follower table;
 	// 5. user follow + 1 toUser follower + 1; 6. update userInfo in redis

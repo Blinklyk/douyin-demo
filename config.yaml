@@ -16,3 +16,5 @@ jwt:
   BufferTime:       # 缓冲时间
   Issuer: "douyin-demo" #签发人
   JwtBlacklistGracePeriod: 10 # 黑名单宽限时间
+
+

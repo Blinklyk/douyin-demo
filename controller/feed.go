@@ -1,43 +1,54 @@
 package controller
 
 import (
-	"context"
-	"github.com/RaymondCode/simple-demo/global"
-	"github.com/RaymondCode/simple-demo/model"
+	"github.com/RaymondCode/simple-demo/model/request"
+	"github.com/RaymondCode/simple-demo/model/response"
+	"github.com/RaymondCode/simple-demo/service"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"time"
 )
 
-type FeedResponse struct {
-	Response
-	VideoList []model.Video `json:"video_list,omitempty"`
-	NextTime  int64         `json:"next_time,omitempty"`
-}
-
-var videos []model.Video
-
 // Feed token is optional here
 func Feed(c *gin.Context) {
 
-	result := global.DY_DB.Preload("User").Order("ID desc").Find(&videos)
-	if result.RowsAffected == 0 {
-		log.Println("0 videos query from database")
+	// bind request var
+	var feedRequest request.FeedRequest
+	if err := c.ShouldBind(&feedRequest); err != nil {
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: "feed bind error"})
 	}
 
-	c.JSON(http.StatusOK, FeedResponse{
-		Response:  Response{StatusCode: 0},
-		VideoList: videos,
-		NextTime:  time.Now().Unix(),
-	})
-}
+	// call service
+	fs := service.FeedService{}
+	token := feedRequest.Token
+	// if request doesn't contain token
+	if token == "" {
+		feedList, err := fs.FeedWithoutToken()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error:feed without token" + err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response.FeedResponse{
+			Response:  response.Response{StatusCode: 0},
+			VideoList: *feedList,
+			NextTime:  time.Now().Unix(),
+		})
+		return
+	}
 
-func Test(c *gin.Context) {
+	// if request contains token
+	if token != "" {
+		feedList, err := fs.FeedWithToken(&feedRequest)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error:feed with token" + err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, response.FeedResponse{
+			Response:  response.Response{StatusCode: 0},
+			VideoList: *feedList,
+			NextTime:  time.Now().Unix(),
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, "pong")
-	global.DY_REDIS.SetNX(context.Background(), "time", "1640", 10)
-
-	res := global.DY_REDIS.Get(context.Background(), "time")
-	log.Println(res)
 }

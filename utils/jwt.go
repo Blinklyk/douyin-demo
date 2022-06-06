@@ -64,22 +64,14 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		//jwt framework parsetoken version
 		//mc, err := ParseToken(tokenStr)
 
-		// redis parse token version
-		// key:login:session:"+tokenStr, value:user TTL:10min
-		res := global.DY_REDIS.Get(context.Background(), global.REDIS_USER_PREFIX+tokenStr)
-		log.Println("jwt check from redis:", res)
-		UserStr := res.Val()
-		// if token already expired, abort
-		if UserStr == "" {
+		UserStr, err := RedisParseToken(tokenStr)
+		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code": 2005,
 				"msg":  "无效的Token/Token验证错误/Token过期",
 			})
 			c.Abort()
-			return
 		}
-		// if token in use, then refresh the TTL˜
-		global.DY_REDIS.Expire(context.Background(), global.REDIS_USER_PREFIX+tokenStr, global.REDIS_USER_TTL)
 		c.Set("UserStr", UserStr)
 		c.Next()
 
@@ -87,4 +79,19 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 		//c.Set("ID", mc.ID)
 		//c.Next() // 后续的处理函数可以用过c.Get("username")来获取当前请求的用户信息
 	}
+}
+
+// RedisParseToken redis parse token version
+// key:login:session:"+tokenStr, value:user TTL:10min
+func RedisParseToken(tokenStr string) (string, error) {
+	res := global.DY_REDIS.Get(context.Background(), global.REDIS_USER_PREFIX+tokenStr)
+	log.Println("jwt check from redis:", res)
+	UserStr := res.Val()
+	// if token already expired, abort
+	if UserStr == "" {
+		return "", errors.New("error: parse token ")
+	}
+	// if token in use, then refresh the TTL˜
+	global.DY_REDIS.Expire(context.Background(), global.REDIS_USER_PREFIX+tokenStr, global.REDIS_USER_TTL)
+	return UserStr, nil
 }

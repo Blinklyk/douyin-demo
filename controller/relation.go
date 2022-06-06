@@ -12,11 +12,6 @@ import (
 	"strconv"
 )
 
-type FollowListResponse struct {
-	Response
-	UserList []model.User `json:"user_list"`
-}
-
 // RelationAction actionType = 1: follow; actionType = 2: cancel follow
 func RelationAction(c *gin.Context) {
 	UserStr, _ := c.Get("UserStr")
@@ -44,7 +39,7 @@ func RelationAction(c *gin.Context) {
 	}
 
 	relationService := &service.RelationService{}
-	if err := relationService.RelationAction(userInfoVar, &relationActionRequest); err != nil {
+	if err := relationService.RelationAction(&userInfoVar, &relationActionRequest); err != nil {
 		c.JSON(http.StatusBadRequest, Response{StatusCode: 1, StatusMsg: err.Error()})
 		return
 	}
@@ -52,7 +47,7 @@ func RelationAction(c *gin.Context) {
 
 }
 
-// FollowList all users have same follow list
+// FollowList get follow list of the current user
 func FollowList(c *gin.Context) {
 	UserStr, _ := c.Get("UserStr")
 	log.Println("UserStr: ", UserStr)
@@ -85,15 +80,13 @@ func FollowList(c *gin.Context) {
 	})
 }
 
-// FollowerList all users have same follower list
+// FollowerList get follower list of the current user
 func FollowerList(c *gin.Context) {
 
 	UserStr, _ := c.Get("UserStr")
-	log.Println("UserStr: ", UserStr)
 
 	var userInfoVar model.User
 	if err := json.Unmarshal([]byte(UserStr.(string)), &userInfoVar); err != nil {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error: session unmarshal error"})
 		return
 	}

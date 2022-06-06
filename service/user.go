@@ -9,12 +9,12 @@ import (
 	"github.com/RaymondCode/simple-demo/utils"
 	"gorm.io/gorm"
 	"log"
-	"strconv"
 )
 
 type UserService struct{}
 
-func (us *UserService) Register(user model.User) (err error, newUser model.User) {
+// Register user register and store to db
+func (us *UserService) Register(user *model.User) (err error, newUser *model.User) {
 	// 校验 查询数据库中是否有此用户(高级查询)
 	var u model.User
 	if !errors.Is(global.DY_DB.Model(&model.User{}).Where("username = ?", user.Username).First(&u).Error, gorm.ErrRecordNotFound) {
@@ -27,12 +27,13 @@ func (us *UserService) Register(user model.User) (err error, newUser model.User)
 	// 密码加密
 	user.Password = utils.BcryptHash(user.Password)
 	// 添加到数据库
-	log.Print("%v\n", user)
+	log.Printf("%v\n", user)
 	err = global.DY_DB.Create(&user).Error
 	return err, user
 }
 
-func (us *UserService) Login(user model.User) (returnUser *model.User, tokenStr string, err error) {
+// Login user login and store some date to redis
+func (us *UserService) Login(user *model.User) (returnUser *model.User, tokenStr string, err error) {
 
 	// jwt version
 	// TODO 校验
@@ -82,11 +83,10 @@ func (us *UserService) Login(user model.User) (returnUser *model.User, tokenStr 
 	//}
 	//session.Set(u.ID, jsonU)
 	//err = session.Save()
-
-	if err != nil {
-		return nil, "", err
-	}
-	return &u, strconv.FormatInt(u.ID, 10), nil
+	//if err != nil {
+	//	return nil, "", err
+	//}
+	//return &u, strconv.FormatInt(u.ID, 10), nil
 
 }
 
