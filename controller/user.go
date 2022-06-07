@@ -77,7 +77,7 @@ func Login(c *gin.Context) {
 	return
 }
 
-// UserInfo get userInfo from db
+// UserInfo get login userInfo from db
 func UserInfo(c *gin.Context) {
 
 	// authentication jwt version
@@ -101,7 +101,7 @@ func UserInfo(c *gin.Context) {
 	var checkUserInfoService = service.UserService{}
 	returnUser, err := checkUserInfoService.GetUserInfo(userInfoVar.ID, userInfoVar.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error: db select"})
+		c.JSON(http.StatusInternalServerError, response.Response{StatusCode: 1, StatusMsg: "error: db select"})
 		return
 	}
 

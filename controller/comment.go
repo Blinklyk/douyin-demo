@@ -80,7 +80,7 @@ func CommentList(c *gin.Context) {
 
 	// call service
 	cs := service.CommentService{}
-	commentList, err := cs.CommentList(&commentListRequest)
+	commentList, err := cs.CommentList(userInfoVar, &commentListRequest)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, Response{StatusCode: 1, StatusMsg: "error in commentList: " + err.Error()})
 	}

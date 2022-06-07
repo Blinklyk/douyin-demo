@@ -7,6 +7,7 @@ import (
 	"github.com/RaymondCode/simple-demo/model/request"
 	"github.com/RaymondCode/simple-demo/utils"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -43,6 +44,12 @@ func (ps *PublishService) PublishList(r *request.PublishListRequest) (publishVid
 	if err := global.DY_DB.Where("user_id = ?", r.UserID).Preload("User").Order("ID desc").Find(&publishVideos).Error; err != nil {
 		return nil, err
 	}
+	// add is_favorite and is_follow value
+	userIDNum, err := strconv.ParseInt(r.UserID, 10, 64)
+	if err != nil {
+		return nil, errors.New("error: conv userID to int64 ")
+	}
+	VideoListAppendInfo(publishVideos, userIDNum)
 
 	return
 

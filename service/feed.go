@@ -30,20 +30,12 @@ func (fs *FeedService) FeedWithToken(r *request.FeedRequest) (*[]model.Video, er
 		return nil, err
 	}
 
-	for i := 0; i < len(videos); i++ {
-		// determine is_favorite value
-		var tmp model.Favorite
-		if res := global.DY_DB.Model(&model.Favorite{}).Where("user_id = ? AND video_id = ?", userInfoVar.ID, videos[i].ID).First(&tmp); res.RowsAffected != 0 {
-			videos[i].IsFavorite = true
-		}
-		// determine is_follow value
-		var temp model.Follow
-		if res := global.DY_DB.Model(&model.Follow{}).Where("user_id = ? AND follow_id = ?", userInfoVar.ID, videos[i].UserID).First(&temp); res.RowsAffected != 0 {
-			videos[i].User.IsFollow = true
-		}
+	returnVideos, err := VideoListAppendInfo(videos, userInfoVar.ID)
+	if err != nil {
+		return nil, errors.New("error: videoListAppendInfo")
 	}
 
-	return &videos, nil
+	return returnVideos, nil
 
 }
 

@@ -1,8 +1,8 @@
-app: # 应用基本配置
-  env: local # 环境名称
-  port: 8080 # 服务监听端口号
-  app_name: gin-app # 应用名称
-  app_url: 0.0.0.0 # 应用域名
+app:
+  env: local
+  port: 8080
+  app_name: gin-app
+  app_url: 0.0.0.0
 
 
 redis:

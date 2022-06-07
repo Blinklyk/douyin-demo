@@ -77,11 +77,19 @@ func (cs *CommentService) DeleteCommentAction(r *request.CommentRequest) error {
 }
 
 // CommentList get comment list
-func (cs *CommentService) CommentList(r *request.CommentListRequest) (*[]model.Comment, error) {
+func (cs *CommentService) CommentList(u model.User, r *request.CommentListRequest) (*[]model.Comment, error) {
 	videoID := r.VideoID
 	var commentList []model.Comment
 	if err := global.DY_DB.Model(&model.Comment{}).Where("video_id = ?", videoID).Preload("User").Find(&commentList).Error; err != nil {
 		return nil, errors.New("get comment list when db select error")
+	}
+
+	// add is_follow value to the comment list
+	for i := 0; i < len(commentList); i++ {
+		var temp model.Follow
+		if res := global.DY_DB.Model(&model.Follow{}).Where("user_id = ? AND follow_id = ?", u.ID, commentList[i].UserID).First(&temp); res.RowsAffected != 0 {
+			commentList[i].User.IsFollow = true
+		}
 	}
 	return &commentList, nil
 }

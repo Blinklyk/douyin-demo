@@ -121,5 +121,15 @@ func (fs *FavoriteService) FavoriteList(r *request.FavoriteListRequest) (favorit
 	if err := global.DY_DB.Model(&model.Video{}).Where("ID in ?", videosID).Preload("User").Find(&favoriteVideoList).Error; err != nil {
 		return nil, errors.New("get videos from derived videosID" + err.Error())
 	}
-	return
+
+	// add is_favorite and is_follow info to the video list
+	userIDNum, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		return nil, errors.New("error: strconv userId to 64")
+	}
+	returnFavoriteVideoList, err := VideoListAppendInfo(*favoriteVideoList, userIDNum)
+	if err != nil {
+		return nil, err
+	}
+	return returnFavoriteVideoList, nil
 }
