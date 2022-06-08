@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	_ "database/sql"
 	"errors"
 	"github.com/RaymondCode/simple-demo/global"
 )
@@ -9,7 +10,7 @@ func Init() error {
 	// init Viper
 	InitializeConfig()
 	// init Redis
-	global.App.DY_REDIS, _ = InitializeRedis()
+	global.App.DY_REDIS = InitializeRedis()
 	// init zap log
 	global.App.DY_LOG = InitializeLog()
 	// init gorm and connect db

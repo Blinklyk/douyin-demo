@@ -7,7 +7,7 @@ type Server struct {
 	Redis   Redis   `mapstructure:"redis" json:"redis" yaml:"redis"`
 	Email   Email   `mapstructure:"email" json:"email" yaml:"email"`
 	Casbin  Casbin  `mapstructure:"casbin" json:"casbin" yaml:"casbin"`
-	System  System  `mapstructure:"system" json:"system" yaml:"system"`
+	System  System  `map structure:"system" json:"system" yaml:"system"`
 	Captcha Captcha `mapstructure:"captcha" json:"captcha" yaml:"captcha"`
 	// auto
 	AutoCode Autocode `mapstructure:"autocode" json:"autocode" yaml:"autocode"`

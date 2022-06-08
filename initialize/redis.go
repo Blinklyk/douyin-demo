@@ -6,7 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func InitializeRedis() (*redis.Client, error) {
+func InitializeRedis() *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     global.App.DY_CONFIG.Redis.Addr,
 		Password: global.App.DY_CONFIG.Redis.Password, // no password set
@@ -15,7 +15,7 @@ func InitializeRedis() (*redis.Client, error) {
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		global.App.DY_LOG.Error(err.Error())
-		return nil, err
+		return nil
 	}
-	return client, nil
+	return client
 }
