@@ -9,16 +9,16 @@ func Init() error {
 	// init Viper
 	InitializeConfig()
 	// init Redis
-	global.DY_REDIS = InitializeRedis()
+	global.App.DY_REDIS, _ = InitializeRedis()
 	// init zap log
-	//zap.ReplaceGlobals(global.DY_LOG)
+	global.App.DY_LOG = InitializeLog()
 	// init gorm and connect db
-	global.DY_DB = Gorm()
-	if global.DY_DB == nil {
+	global.App.DY_DB = Gorm()
+	if global.App.DY_DB == nil {
 		return errors.New("gorm initialize failed")
 	}
 	// init tables
-	RegisterTables(global.DY_DB)
+	RegisterTables(global.App.DY_DB)
 
 	return nil
 }

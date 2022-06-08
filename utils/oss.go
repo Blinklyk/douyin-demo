@@ -18,8 +18,8 @@ type MyPutRet struct {
 func UploadFile(localPath string) *MyPutRet {
 	// get from platform
 	// set your own ak sk here
-	accessKey := ""
-	secretKey := ""
+	accessKey := "j7dRF1sA0b9y0u4ltGCWUnFRrmCBsP5V6XEOarJ1"
+	secretKey := "0RN1xvNRmkZo-zd6GznEccBc_MH9-i1n5tzpBPWw"
 
 	localFile := localPath
 	// storage space name

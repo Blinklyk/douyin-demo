@@ -8,7 +8,7 @@ import (
 )
 
 func GormMysql() *gorm.DB {
-	m := global.DY_CONFIG.Mysql
+	m := global.App.DY_CONFIG.Mysql
 	if m.Dbname == "" {
 		return nil
 

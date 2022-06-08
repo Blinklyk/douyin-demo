@@ -3,7 +3,7 @@ package config
 type Server struct {
 	App     App     `mapstructure:"app" json:"app" yaml:"app"`
 	JWT     JWT     `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
-	Zap     Zap     `mapstructure:"zap" json:"zap" yaml:"zap"`
+	Log     Log     `mapstructure:"log" json:"log" yaml:"log"`
 	Redis   Redis   `mapstructure:"redis" json:"redis" yaml:"redis"`
 	Email   Email   `mapstructure:"email" json:"email" yaml:"email"`
 	Casbin  Casbin  `mapstructure:"casbin" json:"casbin" yaml:"casbin"`
